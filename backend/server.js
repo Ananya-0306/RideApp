@@ -1,75 +1,84 @@
-require("dotenv").config();
 const express = require("express");
+const http = require("http");
+const WebSocket = require("ws");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const http = require("http");
-const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: { origin: "*" }
-});
+const wss = new WebSocket.Server({ server });
 
-// Middleware
-app.use(cors());
 app.use(express.json());
+app.use(cors());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.log("MongoDB Connection Error:", err));
+// 🔹 Corrected MongoDB URI
+const mongoURI = "mongodb+srv://ananya:QQxMLDQ9BAMwdcty@onehub.ja5vv.mongodb.net/?retryWrites=true&w=majority&appName=OneHub";
 
-// Ride Schema
-const RideSchema = new mongoose.Schema({
+// 🔹 Fixed MongoDB Connection
+mongoose.connect(mongoURI, {})
+    .then(() => console.log("✅ Connected to MongoDB"))
+    .catch(err => console.error("❌ DB Connection Error:", err));
+
+// 🔹 Ride Schema & Model
+const rideSchema = new mongoose.Schema({
     location: String,
     destination: String,
-    status: { type: String, default: "scheduled" },
-    price: Number
+    price: Number,
+    status: { type: String, default: "pending" }
 });
-const Ride = mongoose.model("Ride", RideSchema);
+const Ride = mongoose.model("Ride", rideSchema);
 
-// API: Get estimated ride price
-app.post("/api/getPrices", (req, res) => {
+// 🔹 API to Get Ride Prices
+app.post("/api/getPrices", async (req, res) => {
     const { location, destination } = req.body;
-    const estimatedPrice = (Math.random() * (20 - 5) + 5).toFixed(2);
-    res.json({ price: estimatedPrice });
+    
+    if (!location || !destination) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const price = Math.floor(Math.random() * 30) + 10; // Generate random price
+    res.json({ price });
 });
 
-// API: Schedule a ride
+// 🔹 API to Schedule a Ride
 app.post("/api/scheduleRide", async (req, res) => {
     const { location, destination } = req.body;
-    const price = (Math.random() * (20 - 5) + 5).toFixed(2);
-
-    const newRide = new Ride({ location, destination, status: "scheduled", price });
+    
+    if (!location || !destination) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+    
+    const price = Math.floor(Math.random() * 50) + 10;
+    const newRide = new Ride({ location, destination, price });
     await newRide.save();
     
-    io.emit("rideBooked", { id: newRide._id, status: "scheduled" });
-    
-    res.json({ bookingId: newRide._id, message: "Ride scheduled successfully!" });
+    res.json({ bookingId: newRide._id, message: "Ride scheduled successfully" });
+
+    // 🔹 Broadcast Ride Status Update
+    if (wss.clients.size > 0) {
+        broadcast({ type: "rideUpdate", status: "Ride Scheduled", bookingId: newRide._id });
+    }
 });
 
-// WebSocket: Track Ride Status
-io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+// 🔹 WebSocket Connection Handling
+wss.on("connection", ws => {
+    console.log("🟢 New WebSocket connection");
+    ws.on("message", message => {
+        console.log("Received message:", message);
+    });
+});
 
-    socket.on("trackRide", async (rideId) => {
-        const ride = await Ride.findById(rideId);
-        if (ride) {
-            socket.emit("rideStatus", ride.status);
-        } else {
-            socket.emit("rideStatus", "Ride not found");
+// 🔹 Fixed WebSocket Broadcast Function
+function broadcast(data) {
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(data));
         }
     });
+}
 
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-    });
+// 🔹 Start Server
+const PORT = 5000;
+server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
 });
-
-// Start Server
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

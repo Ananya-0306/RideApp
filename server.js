@@ -1,8 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
@@ -16,38 +14,32 @@ mongoose
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.log("❌ DB Connection Error:", err));
 
-// User Schema
-const UserSchema = new mongoose.Schema({
-  username: String,
-  password: String,
+// Ride Schema
+const RideSchema = new mongoose.Schema({
+  location: String,
+  destination: String,
+  bookingId: String,
 });
 
-const User = mongoose.model("User", UserSchema);
+const Ride = mongoose.model("Ride", RideSchema);
 
-// **Signup API**
-app.post("/signup", async (req, res) => {
-  const { username, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  
-  try {
-    const newUser = new User({ username, password: hashedPassword });
-    await newUser.save();
-    res.json({ success: true, message: "User registered successfully!" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error registering user." });
+// **Schedule Ride API**
+app.post("/api/scheduleRide", async (req, res) => {
+  const { location, destination } = req.body;
+
+  if (!location || !destination) {
+    return res.status(400).json({ success: false, message: "Location and destination are required." });
   }
-});
 
-// **Login API**
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  const user = await User.findOne({ username });
+  try {
+    const bookingId = Math.random().toString(36).substr(2, 9);
+    const newRide = new Ride({ location, destination, bookingId });
+    await newRide.save();
 
-  if (user && (await bcrypt.compare(password, user.password))) {
-    const token = jwt.sign({ username: user.username }, "your_secret_key", { expiresIn: "1h" });
-    res.json({ success: true, message: "Login successful!", token });
-  } else {
-    res.json({ success: false, message: "Invalid credentials." });
+    res.json({ success: true, message: "Ride scheduled successfully!", bookingId });
+  } catch (error) {
+    console.error("Error scheduling ride:", error);
+    res.status(500).json({ success: false, message: "Failed to schedule ride." });
   }
 });
 

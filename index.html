@@ -152,33 +152,53 @@
         document.getElementById("seePrices").addEventListener("click", async function() {
             const location = document.getElementById("location").value;
             const destination = document.getElementById("destination").value;
-            if (location && destination) {
+            
+            if (!location || !destination) {
+                alert("Please enter both location and destination");
+                return;
+            }
+
+            try {
                 const response = await fetch("http://localhost:5000/api/getPrices", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ location, destination })
                 });
+                
+                if (!response.ok) throw new Error("Failed to fetch prices");
+                
                 const data = await response.json();
                 alert(`Estimated fare: $${data.price}`);
-            } else {
-                alert("Please enter both location and destination");
+            } catch (error) {
+                console.error("Error fetching price:", error);
+                alert("Failed to fetch prices. Check server.");
             }
         });
 
         document.getElementById("scheduleLater").addEventListener("click", async function() {
             const location = document.getElementById("location").value;
             const destination = document.getElementById("destination").value;
-            if (location && destination) {
+            
+            if (!location || !destination) {
+                alert("Please enter both location and destination");
+                return;
+            }
+
+            try {
                 const response = await fetch("http://localhost:5000/api/scheduleRide", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ location, destination })
                 });
+                
+                if (!response.ok) throw new Error("Failed to schedule ride");
+                
                 const data = await response.json();
                 alert(`Ride scheduled successfully! Booking ID: ${data.bookingId}`);
                 socket.send(JSON.stringify({ type: "rideBooked", bookingId: data.bookingId }));
-            } else {
-                alert("Please enter both location and destination");
+            } catch (error) {
+                console.error("Error scheduling ride:", error);
+                alert("Failed to schedule ride. Check server.");
             }
         });
 
