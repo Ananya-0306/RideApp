@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ride Booking | One Hub</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -22,29 +22,7 @@
             align-items: center;
             background: black;
             color: white;
-            padding: 15px 30px;
-            opacity: 0;
-            /* Initially hidden */
-        }
-
-        .navbar .brand {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .navbar .login-btn {
-            background: white;
-            color: black;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-
-        .navbar .login-btn:hover {
-            background: #ddd;
+            padding: 11px 30px;
         }
 
         .container {
@@ -55,26 +33,10 @@
             max-width: 1100px;
             margin: 50px auto;
             gap: 50px;
-            opacity: 0;
-            /* Initially hidden */
         }
 
         .ride-section {
             max-width: 500px;
-        }
-
-        .ride-section h2 {
-            font-size: 38px;
-            margin-bottom: 10px;
-            font-weight: bold;
-            opacity: 1;
-        }
-
-        .ride-section p {
-            font-size: 16px;
-            margin-bottom: 20px;
-            color: #555;
-            opacity: 1;
         }
 
         .ride-form {
@@ -84,14 +46,6 @@
             width: 100%;
             max-width: 500px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transform: translateY(50px);
-            opacity: 0;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
         }
 
         .input-field {
@@ -126,66 +80,45 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: 0.3s;
         }
 
-        .ride-form button:hover {
-            transform: scale(1.05);
+        .login-btn:hover {
+            background: #f6f6f9;
+            color: black;
+            padding: 14px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .login-btn {
+            background: #f6f6f9;
+            color: black;
+            padding: 14px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
         }
 
         .illustration img {
-            width: 100%;
             max-width: 450px;
-            border-radius: 12px;
-            transform: scale(0.8);
-            opacity: 0;
+            width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                text-align: center;
+            }
+            .illustration img {
+                max-width: 100%;
+            }
         }
     </style>
-    <script>
-        function validateInputs() {
-            const location = document.getElementById("location").value.trim();
-            const destination = document.getElementById("destination").value.trim();
-            if (!location || !destination) {
-                alert("Please enter both location and destination");
-                return false;
-            }
-            return true;
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById("seePrices").addEventListener("click", function (event) {
-                if (!validateInputs()) {
-                    event.preventDefault();
-                }
-            });
-
-            document.getElementById("scheduleLater").addEventListener("click", function (event) {
-                if (!validateInputs()) {
-                    event.preventDefault();
-                }
-            });
-
-            // GSAP Animations
-            // GSAP Animations
-            gsap.to(".navbar", { opacity: 1, duration: 1, y: 0 });
-            gsap.to(".container", { opacity: 1, duration: 1, delay: 0.5 });
-
-            // Fix: Make text appear sooner without excessive movement
-            gsap.from(".ride-section h2, .ride-section p", {
-                opacity: 0,
-                y: 20,  // Slight vertical fade-in instead of sliding left
-                duration: 1,
-                delay: 0.3  // Reduced delay so text appears quicker
-            });
-
-            // Form and Image animations
-            gsap.to(".ride-form", { opacity: 1, y: 0, duration: 1, delay: 0.7 });
-            gsap.to(".illustration img", { opacity: 1, scale: 1, duration: 1, delay: 0.9 });
-
-        });
-    </script>
 </head>
-
 <body>
     <div class="navbar">
         <div class="brand">One Hub</div>
@@ -213,9 +146,17 @@
             </div>
         </div>
         <div class="illustration">
-            <img src="Images/hero1.webp" alt="Ride illustration">
+            <img src="./Images/hero1.webp" alt="Ride illustration">
         </div>
     </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            gsap.from(".navbar", { opacity: 0, duration: 1, y: -20 });
+            gsap.from(".container", { opacity: 0, duration: 1, delay: 0.5, y: 30 });
+            gsap.from(".ride-section h2, .ride-section p", { opacity: 0, y: 20, duration: 1, delay: 0.3 });
+            gsap.from(".ride-form", { opacity: 0, y: 20, duration: 1, delay: 0.7 });
+        });
+    </script>
 </body>
-
 </html>
