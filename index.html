@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Booking | Uber Clone</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 1100px;
+            gap: 50px;
+        }
+        
+        .ride-section {
+            max-width: 500px;
+        }
+        
+        .ride-section h2 {
+            font-size: 38px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .ride-section p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .ride-form {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .input-field {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        
+        .input-field input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            padding-left: 10px;
+        }
+        
+        .icon {
+            font-size: 18px;
+            color: #888;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .ride-form button {
+            flex: 1;
+            background: black;
+            color: white;
+            padding: 14px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .ride-form button:nth-child(2) {
+            background: #e0e0e0;
+            color: black;
+        }
+        
+        .illustration img {
+            width: 100%;
+            max-width: 450px;
+            border-radius: 12px;
+        }
+
+        #rideStatus {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: green;
+        }
+    </style>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="ride-section">
+            <h2>Request a ride for now or later</h2>
+            <p>Add your trip details, hop in, and go.</p>
+            <div class="ride-form">
+                <div class="input-group">
+                    <div class="input-field">
+                        <i class="fas fa-map-marker-alt icon"></i>
+                        <input type="text" id="location" placeholder="Enter location">
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-map-pin icon"></i>
+                        <input type="text" id="destination" placeholder="Enter destination">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="seePrices">See prices</button>
+                    <button id="scheduleLater">Schedule for later</button>
+                </div>
+                <div id="rideStatus"></div>
+            </div>
+        </div>
+        <div class="illustration">
+            <img src="Images/hero1.webp" alt="Ride illustration">
+        </div>
+    </div>
+    <script>
+        const socket = new WebSocket("ws://localhost:5000");
+
+        document.getElementById("seePrices").addEventListener("click", async function() {
+            const location = document.getElementById("location").value;
+            const destination = document.getElementById("destination").value;
+            if (location && destination) {
+                const response = await fetch("http://localhost:5000/api/getPrices", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ location, destination })
+                });
+                const data = await response.json();
+                alert(`Estimated fare: $${data.price}`);
+            } else {
+                alert("Please enter both location and destination");
+            }
+        });
+
+        document.getElementById("scheduleLater").addEventListener("click", async function() {
+            const location = document.getElementById("location").value;
+            const destination = document.getElementById("destination").value;
+            if (location && destination) {
+                const response = await fetch("http://localhost:5000/api/scheduleRide", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ location, destination })
+                });
+                const data = await response.json();
+                alert(`Ride scheduled successfully! Booking ID: ${data.bookingId}`);
+                socket.send(JSON.stringify({ type: "rideBooked", bookingId: data.bookingId }));
+            } else {
+                alert("Please enter both location and destination");
+            }
+        });
+
+        socket.onmessage = function(event) {
+            const message = JSON.parse(event.data);
+            if (message.type === "rideUpdate") {
+                document.getElementById("rideStatus").textContent = `Ride Status: ${message.status}`;
+            }
+        };
+    </script>
+</body>
+</html>
