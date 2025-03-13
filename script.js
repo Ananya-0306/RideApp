@@ -30,4 +30,5 @@ async function bookRide() {
         message.textContent = "❌ Please enter all details.";
         message.style.color = "#ff4d4d";
     }
+    
 }

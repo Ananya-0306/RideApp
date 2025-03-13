@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Manage Bookings</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+            color: #000000;
+        }
+        
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #00060b;
+            padding: 15px 30px;
+            color: white;
+        }
+        .navbar h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+        .logout-btn {
+            background: #dc3545;
+            padding: 10px 15px;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        /* Dashboard Container */
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #050505;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #007bff;
+            color: white;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+        tr:hover {
+            background: #e9ecef;
+            transition: 0.3s;
+        }
+
+        /* Select Dropdown */
+        select {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        /* Buttons */
+        .action-btn {
+            padding: 8px 14px;
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        .action-btn:hover {
+            background: #218838;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                text-align: center;
+            }
+            table {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>Admin Dashboard</h1>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div class="container">
+        <h2>Manage Bookings</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Location</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="bookingTable">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchBookings() {
+            try {
+                const response = await fetch("http://localhost:5000/api/getBookings");
+                const data = await response.json();
+                const table = document.getElementById("bookingTable");
+                table.innerHTML = "";
+
+                data.bookings.forEach(booking => {
+                    const row = `<tr>
+                        <td>${booking.bookingId}</td>
+                        <td>${booking.location}</td>
+                        <td>${booking.destination}</td>
+                        <td>
+                            <select onchange="updateStatus('${booking.bookingId}', this.value)">
+                                <option value="scheduled" ${booking.status === "scheduled" ? "selected" : ""}>Scheduled</option>
+                                <option value="ongoing" ${booking.status === "ongoing" ? "selected" : ""}>Ongoing</option>
+                                <option value="completed" ${booking.status === "completed" ? "selected" : ""}>Completed</option>
+                            </select>
+                        </td>
+                        <td><button class="action-btn" onclick="updateStatus('${booking.bookingId}', 'completed')">Mark as Completed</button></td>
+                    </tr>`;
+                    table.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error fetching bookings:", error);
+            }
+        }
+
+        async function updateStatus(bookingId, status) {
+            try {
+                await fetch(`http://localhost:5000/api/updateBooking/${bookingId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status })
+                });
+                fetchBookings();
+            } catch (error) {
+                console.error("Error updating status:", error);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("adminToken");
+            window.location.href = "index.html";  // Redirect to home page
+        }
+
+        fetchBookings();
+    </script>
+
+</body>
+</html>

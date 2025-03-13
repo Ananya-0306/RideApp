@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
@@ -14,32 +16,45 @@ mongoose
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.log("❌ DB Connection Error:", err));
 
-// Ride Schema
-const RideSchema = new mongoose.Schema({
-  location: String,
-  destination: String,
-  bookingId: String,
+// Admin Schema
+const AdminSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+});
+const Admin = mongoose.model("Admin", AdminSchema);
+
+// Middleware to verify admin token
+const verifyAdminToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) return res.status(403).json({ success: false, message: "Access denied" });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ success: false, message: "Invalid token" });
+    req.admin = decoded;
+    next();
+  });
+};
+
+// **Admin Login API**
+app.post("/api/admin/login", async (req, res) => {
+  const { username, password } = req.body;
+  const admin = await Admin.findOne({ username });
+
+  if (admin && (await bcrypt.compare(password, admin.password))) {
+    const token = jwt.sign({ username: admin.username }, process.env.JWT_SECRET, { expiresIn: "2h" });
+    res.json({ success: true, message: "Login successful!", token });
+  } else {
+    res.status(401).json({ success: false, message: "Invalid credentials." });
+  }
 });
 
-const Ride = mongoose.model("Ride", RideSchema);
-
-// **Schedule Ride API**
-app.post("/api/scheduleRide", async (req, res) => {
-  const { location, destination } = req.body;
-
-  if (!location || !destination) {
-    return res.status(400).json({ success: false, message: "Location and destination are required." });
-  }
-
+// **Protected Route: Get Bookings (Admin Only)**
+app.get("/api/admin/bookings", verifyAdminToken, async (req, res) => {
   try {
-    const bookingId = Math.random().toString(36).substr(2, 9);
-    const newRide = new Ride({ location, destination, bookingId });
-    await newRide.save();
-
-    res.json({ success: true, message: "Ride scheduled successfully!", bookingId });
+    const bookings = await Booking.find();
+    res.json({ success: true, bookings });
   } catch (error) {
-    console.error("Error scheduling ride:", error);
-    res.status(500).json({ success: false, message: "Failed to schedule ride." });
+    res.status(500).json({ success: false, message: "Error fetching bookings." });
   }
 });
 
