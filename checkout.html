@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | One Hub</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #ece9e6, #ffffff);
+            color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .checkout-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .checkout-container h2 {
+            margin-bottom: 10px;
+        }
+        .checkout-container p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .checkout-container button {
+            background: black;
+            color: white;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <h2>Checkout</h2>
+        <p id="selectedVehicle">Selected Vehicle: </p>
+        <p>Price: <span id="price"></span></p>
+        <button onclick="confirmBooking()">Confirm Booking</button>
+    </div>
+
+    <script>
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        const vehicle = getQueryParam('vehicle');
+        document.getElementById('selectedVehicle').textContent = `Selected Vehicle: ${vehicle}`;
+        
+        const prices = { 'Sedan': '$10', 'SUV': '$15', 'Mini': '$8' };
+        document.getElementById('price').textContent = prices[vehicle] || 'N/A';
+        
+        function confirmBooking() {
+            alert('Booking Confirmed!');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

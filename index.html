@@ -84,6 +84,30 @@
             cursor: pointer;
         }
 
+        .price-container, .vehicle-options, .driver-assign {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .vehicle-options ul, .driver-assign ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .vehicle-options li, .driver-assign li {
+            padding: 10px;
+            background: #e0e0e0;
+            margin-top: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .vehicle-options li:hover, .driver-assign li:hover {
+            background: #d0d0d0;
+        }
+
         .map-container {
             width: 50%;
             height: 400px;
@@ -103,8 +127,8 @@
     </div>
     <div class="container">
         <div class="ride-section">
-            <h2>Request a Ride for Now or Later</h2>
-            <p>Add your Trip details, Hop In, and Go.</p>
+            <h2>Request a ride for now or later</h2>
+            <p>Add your trip details, hop in, and go.</p>
             <div class="ride-form">
                 <div class="input-group">
                     <div class="input-field">
@@ -118,8 +142,11 @@
                 </div>
                 <div class="button-group">
                     <button id="seePrices">See prices</button>
-                    <button id="scheduleLater">Schedule for later</button>
+                    <button id="bookNow">Book Now</button>
                 </div>
+                <div id="priceDisplay" class="price-container"></div>
+                <div id="vehicleOptions" class="vehicle-options"></div>
+                <div id="driverAssign" class="driver-assign"></div>
             </div>
         </div>
         <div class="map-container">
@@ -128,37 +155,31 @@
     </div>
     
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            gsap.from(".navbar", { opacity: 0, duration: 1, y: -20 });
-            gsap.from(".container", { opacity: 0, duration: 1, delay: 0.5, y: 30 });
-            gsap.from(".ride-section h2, .ride-section p", { opacity: 0, y: 20, duration: 1, delay: 0.3 });
-            gsap.from(".ride-form", { opacity: 0, y: 20, duration: 1, delay: 0.7 });
-        });
-
-        var map = L.map('map').setView([22.5726, 88.3639], 12);
+        var map = L.map('map').setView([51.505, -0.09], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        var marker;
-        function updateMap(location) {
-            if (marker) {
-                map.removeLayer(marker);
-            }
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${location}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        const { lat, lon } = data[0];
-                        map.setView([lat, lon], 14);
-                        marker = L.marker([lat, lon]).addTo(map).bindPopup(`Location: ${location}`).openPopup();
-                    }
-                });
-        }
-
-        document.getElementById("location").addEventListener("change", function () {
-            updateMap(this.value);
+        document.getElementById("seePrices").addEventListener("click", function () {
+            document.getElementById("priceDisplay").textContent = "Estimated Fare: $10 - $20";
         });
+
+        document.getElementById("bookNow").addEventListener("click", function () {
+            document.getElementById("vehicleOptions").innerHTML = `<p>Available Vehicles:</p>
+                <ul>
+                    <li onclick="assignDriver('Sedan')">🚗 Sedan - $10</li>
+                    <li onclick="assignDriver('SUV')">🚙 SUV - $15</li>
+                    <li onclick="assignDriver('Mini')">🚕 Mini - $8</li>
+                </ul>`;
+        });
+
+        function assignDriver(vehicle) {
+            setTimeout(() => {
+                let driver = "John Doe";
+                alert(`${driver} has automatically accepted your ride in a ${vehicle}`);
+                window.location.href = `checkout.html?vehicle=${vehicle}&driver=${driver}`;
+            }, 2000);
+        }
     </script>
 </body>
 </html>
