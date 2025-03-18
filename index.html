@@ -7,12 +7,14 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            background: #fff;
+            background: linear-gradient(to right, #ece9e6, #ffffff);
             color: black;
         }
 
@@ -27,8 +29,8 @@
 
         .container {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            align-items: flex-start;
+            justify-content: center;
             width: 90%;
             max-width: 1100px;
             margin: 50px auto;
@@ -36,18 +38,7 @@
         }
 
         .ride-section {
-            flex: 1;
-            max-width: 500px;
-        }
-
-        .illustration {
-            flex: 1;
-        }
-
-        .illustration img {
-            width: 100%;
-            max-width: 500px;
-            height: auto;
+            width: 50%;
         }
 
         .ride-form {
@@ -55,11 +46,8 @@
             padding: 20px;
             border-radius: 12px;
             width: 100%;
+            max-width: 450px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .input-group {
-            position: relative;
         }
 
         .input-field {
@@ -70,7 +58,6 @@
             border-radius: 8px;
             border: 1px solid #ccc;
             margin-bottom: 10px;
-            position: relative;
         }
 
         .input-field input {
@@ -79,29 +66,6 @@
             outline: none;
             font-size: 16px;
             padding-left: 10px;
-        }
-
-        .suggestions {
-            position: absolute;
-            background: white;
-            border: 1px solid #ccc;
-            width: 100%;
-            max-height: 150px;
-            overflow-y: auto;
-            z-index: 10;
-            border-radius: 5px;
-            display: none;
-            top: 45px;
-        }
-
-        .suggestions li {
-            padding: 10px;
-            cursor: pointer;
-            list-style: none;
-        }
-
-        .suggestions li:hover {
-            background: #ddd;
         }
 
         .button-group {
@@ -119,6 +83,17 @@
             border-radius: 8px;
             cursor: pointer;
         }
+
+        .map-container {
+            width: 50%;
+            height: 400px;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+        }
     </style>
 </head>
 <body>
@@ -128,19 +103,17 @@
     </div>
     <div class="container">
         <div class="ride-section">
-            <h2>Request a ride for now or later</h2>
-            <p>Add your trip details, hop in, and go.</p>
+            <h2>Request a Ride for Now or Later</h2>
+            <p>Add your Trip details, Hop In, and Go.</p>
             <div class="ride-form">
                 <div class="input-group">
                     <div class="input-field">
                         <i class="fas fa-map-marker-alt icon"></i>
                         <input type="text" id="location" placeholder="Enter location">
-                        <ul class="suggestions" id="location-suggestions"></ul>
                     </div>
                     <div class="input-field">
                         <i class="fas fa-map-pin icon"></i>
                         <input type="text" id="destination" placeholder="Enter destination">
-                        <ul class="suggestions" id="destination-suggestions"></ul>
                     </div>
                 </div>
                 <div class="button-group">
@@ -149,44 +122,42 @@
                 </div>
             </div>
         </div>
-        <div class="illustration">
-            <img src="Images/hero1.webp" alt="Ride illustration">
+        <div class="map-container">
+            <div id="map"></div>
         </div>
     </div>
     
     <script>
-        async function fetchLocations(query, inputField, suggestionsList) {
-            if (query.length < 3) {
-                suggestionsList.style.display = "none";
-                return;
+        document.addEventListener("DOMContentLoaded", function () {
+            gsap.from(".navbar", { opacity: 0, duration: 1, y: -20 });
+            gsap.from(".container", { opacity: 0, duration: 1, delay: 0.5, y: 30 });
+            gsap.from(".ride-section h2, .ride-section p", { opacity: 0, y: 20, duration: 1, delay: 0.3 });
+            gsap.from(".ride-form", { opacity: 0, y: 20, duration: 1, delay: 0.7 });
+        });
+
+        var map = L.map('map').setView([22.5726, 88.3639], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker;
+        function updateMap(location) {
+            if (marker) {
+                map.removeLayer(marker);
             }
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
-            const data = await response.json();
-            suggestionsList.innerHTML = "";
-            if (data.length > 0) {
-                suggestionsList.style.display = "block";
-                data.forEach((place) => {
-                    let li = document.createElement("li");
-                    li.innerText = place.display_name;
-                    li.addEventListener("click", () => {
-                        inputField.value = place.display_name;
-                        suggestionsList.style.display = "none";
-                    });
-                    suggestionsList.appendChild(li);
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${location}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const { lat, lon } = data[0];
+                        map.setView([lat, lon], 14);
+                        marker = L.marker([lat, lon]).addTo(map).bindPopup(`Location: ${location}`).openPopup();
+                    }
                 });
-            } else {
-                suggestionsList.style.display = "none";
-            }
         }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const locationInput = document.getElementById("location");
-            const destinationInput = document.getElementById("destination");
-            const locationSuggestions = document.getElementById("location-suggestions");
-            const destinationSuggestions = document.getElementById("destination-suggestions");
-
-            locationInput.addEventListener("input", () => fetchLocations(locationInput.value, locationInput, locationSuggestions));
-            destinationInput.addEventListener("input", () => fetchLocations(destinationInput.value, destinationInput, destinationSuggestions));
+        document.getElementById("location").addEventListener("change", function () {
+            updateMap(this.value);
         });
     </script>
 </body>
