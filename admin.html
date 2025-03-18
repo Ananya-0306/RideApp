@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +14,7 @@
             background: #f8f9fa;
             color: #000000;
         }
-        
+
         /* Navbar */
         .navbar {
             display: flex;
@@ -23,10 +24,12 @@
             padding: 15px 30px;
             color: white;
         }
+
         .navbar h1 {
             margin: 0;
             font-size: 22px;
         }
+
         .logout-btn {
             background: #dc3545;
             padding: 10px 15px;
@@ -36,6 +39,7 @@
             cursor: pointer;
             transition: 0.3s;
         }
+
         .logout-btn:hover {
             background: #c82333;
         }
@@ -49,7 +53,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         h2 {
             text-align: center;
             margin-bottom: 20px;
@@ -64,19 +68,24 @@
             border-radius: 8px;
             overflow: hidden;
         }
-        th, td {
+
+        th,
+        td {
             padding: 12px;
             border: 1px solid #ddd;
             text-align: left;
         }
+
         th {
             background: #007bff;
             color: white;
             text-transform: uppercase;
         }
+
         tr:nth-child(even) {
             background: #f2f2f2;
         }
+
         tr:hover {
             background: #e9ecef;
             transition: 0.3s;
@@ -99,6 +108,7 @@
             border-radius: 6px;
             transition: background 0.3s;
         }
+
         .action-btn:hover {
             background: #218838;
         }
@@ -109,12 +119,14 @@
                 flex-direction: column;
                 text-align: center;
             }
+
             table {
                 font-size: 14px;
             }
         }
     </style>
 </head>
+
 <body>
 
     <!-- Navbar -->
@@ -189,7 +201,33 @@
         }
 
         fetchBookings();
+
+        async function fetchBookings() {
+            try {
+                const response = await fetch("http://localhost:5000/api/bookings");
+                const bookings = await response.json();
+
+                let bookingTable = document.getElementById("bookingTable");
+                bookingTable.innerHTML = "<tr><th>Location</th><th>Destination</th><th>Price</th><th>Driver</th><th>Status</th></tr>";
+
+                bookings.forEach(booking => {
+                    let row = bookingTable.insertRow();
+                    row.innerHTML = `<td>${booking.location}</td>
+                             <td>${booking.destination}</td>
+                             <td>${booking.price}</td>
+                             <td>${booking.driver}</td>
+                             <td>${booking.status}</td>`;
+                });
+            } catch (error) {
+                console.error("Error fetching bookings:", error);
+            }
+        }
+
+        // Call function on page load
+        window.onload = fetchBookings;
+
     </script>
 
 </body>
+
 </html>

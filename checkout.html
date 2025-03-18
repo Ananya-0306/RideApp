@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,6 +18,7 @@
             align-items: center;
             height: 100vh;
         }
+
         .checkout-container {
             background: #fff;
             padding: 20px;
@@ -26,13 +28,16 @@
             max-width: 400px;
             text-align: center;
         }
+
         .checkout-container h2 {
             margin-bottom: 10px;
         }
+
         .checkout-container p {
             font-size: 16px;
             margin-bottom: 20px;
         }
+
         .checkout-container button {
             background: black;
             color: white;
@@ -45,6 +50,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="checkout-container">
         <h2>Checkout</h2>
@@ -61,14 +67,48 @@
 
         const vehicle = getQueryParam('vehicle');
         document.getElementById('selectedVehicle').textContent = `Selected Vehicle: ${vehicle}`;
-        
+
         const prices = { 'Sedan': '$10', 'SUV': '$15', 'Mini': '$8' };
         document.getElementById('price').textContent = prices[vehicle] || 'N/A';
-        
+
         function confirmBooking() {
             alert('Booking Confirmed!');
             window.location.href = 'index.html';
         }
+
+        document.getElementById("bookNow").addEventListener("click", async function () {
+            let location = document.getElementById("location").value;
+            let destination = document.getElementById("destination").value;
+
+            if (location && destination) {
+                const bookingDetails = {
+                    location,
+                    destination,
+                    price: "10-20 USD",  // Change if you have dynamic pricing
+                    driver: "Auto-Assigned"
+                };
+
+                try {
+                    const response = await fetch("http://localhost:5000/api/bookings", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(bookingDetails),
+                    });
+
+                    if (response.ok) {
+                        alert("Booking successful!");
+                        window.location.href = "confirmation.html"; // Redirect after booking
+                    } else {
+                        alert("Error booking ride. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                }
+            } else {
+                alert("Please enter both pickup and destination.");
+            }
+        });
     </script>
 </body>
+
 </html>
